@@ -6,7 +6,7 @@ import Utils
 
 
 def loadTextTranslations():
-    return datasets.load_dataset('M-CLIP/ImageCaptions-7M-Translations')['train']
+    return datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic')['train']
 
 
 def loadTargetEmbeddings(imageBase="Vit-B-32", validationSize=5000):
@@ -25,12 +25,12 @@ def singleGPUTraining():
     gradAccumSteps, batchSize = 1, 256
     numTrainSteps, numWarmupSteps = 99999999, 1000
 
-    modelBase = 'xlm-roberta-large'
-    tokenizerBase = 'xlm-roberta-large'
+    modelBase = 'aubmindlab/bert-base-arabertv2'
+    tokenizerBase = 'aubmindlab/bert-base-arabertv2'
     imageBase = "Vit-B-32"
     modelName = '{}-{}'.format(modelBase, imageBase)
 
-    startWeights = None
+    startWeights = "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/aubmindlab/bert-base-arabertv2-Vit-B-32.index"
     targetCaptions = loadTextTranslations()
     trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(validationSize=numValidationSamples)
 
@@ -42,6 +42,10 @@ def singleGPUTraining():
             return Utils.GradientAccumulator(optimizer, gradAccumSteps)
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizerBase)
+    print("="*100)
+    print("imageEncoderDimensions[-1]: ", imageEncoderDimensions[-1])
+    print("="*100)
+
     model = TrainingModel.SentenceModelWithLinearTransformation(modelBase, imageEncoderDimensions[-1])
 
     if (startWeights is not None):
@@ -62,7 +66,7 @@ def singleGPUTraining():
                   Utils.CustomSaveCallBack(modelName, saveInterval=5, firstSavePoint=5),
               ]
               )
-
+    # self.model.save_weights(self.saveName.format(epoch + 1))
 
 if __name__ == '__main__':
     strategy = tf.distribute.MirroredStrategy()
