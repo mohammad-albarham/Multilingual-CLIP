@@ -1,0 +1,62 @@
+tf_3) lenovo@lenovo-ThinkStation-P920:~/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning$ conda deactivate
+(base) lenovo@lenovo-ThinkStation-P920:~/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning$ conda activate tf
+(tf) lenovo@lenovo-ThinkStation-P920:~/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning$ python3 Training.py
+2023-07-31 19:20:28.165239: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-07-31 19:20:29.756250: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+/home/lenovo/.local/lib/python3.8/site-packages/tensorflow_addons/utils/ensure_tf_install.py:53: UserWarning: Tensorflow Addons supports using Python ops for all Tensorflow versions above or equal to 2.4.0 and strictly below 2.7.0 (nightly versions are not supported). 
+ The versions of TensorFlow you are currently using is 2.12.1 and is not supported. 
+Some things might work, some things might not.
+If you were to encounter a bug, do not file an issue.
+If you want to make sure you're using a tested and supported configuration, either change the TensorFlow version or the TensorFlow Addons's version. 
+You can find the compatibility matrix in TensorFlow Addon's readme:
+https://github.com/tensorflow/addons
+  warnings.warn(
+2023-07-31 19:20:34.216490: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1635] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 30714 MB memory:  -> device: 0, name: Quadro GV100, pci bus id: 0000:18:00.0, compute capability: 7.0
+Found cached dataset parquet (/home/lenovo/.cache/huggingface/datasets/Arabic-Clip___parquet/Arabic-Clip--ImageCaptions-7M-Translations-Arabic-d7413ceeb1668b40/0.0.0/2a3b91fbd88a2c90d1dbbb32b460cf621d31bd5b05b934492fdef7d8d6f236ec)
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  6.31it/s]
+Found cached dataset image_captions-7_m-embeddings (/home/lenovo/.cache/huggingface/datasets/M-CLIP___image_captions-7_m-embeddings/Vit-B-32/1.0.0/57557df0b7a44be970d3827a21b72ffce9e8a7150464d5a8aba7b5eee2c3431f)
+
+Found cached dataset image_captions-7_m-embeddings (/home/lenovo/.cache/huggingface/datasets/M-CLIP___image_captions-7_m-embeddings/Vit-B-32/1.0.0/57557df0b7a44be970d3827a21b72ffce9e8a7150464d5a8aba7b5eee2c3431f)
+====================================================================================================
+imageEncoderDimensions[-1]:  512
+====================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Some weights of the PyTorch model were not used when initializing the TF 2.0 model TFBertModel: ['cls.predictions.decoder.weight', 'cls.predictions.decoder.bias', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.LayerNorm.bias', 'bert.embeddings.position_ids', 'cls.predictions.transform.dense.bias', 'cls.predictions.bias']
+- This IS expected if you are initializing TFBertModel from a PyTorch model trained on another task or with another architecture (e.g. initializing a TFBertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing TFBertModel from a PyTorch model that you expect to be exactly identical (e.g. initializing a TFBertForSequenceClassification model from a BertForSequenceClassification model).
+All the weights of TFBertModel were initialized from the PyTorch model.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use TFBertModel for predictions without further training.
+====================================================================================================
+Loading weights ...
+Traceback (most recent call last):
+  File "Training.py", line 76, in <module>
+    singleGPUTraining()
+  File "Training.py", line 53, in singleGPUTraining
+    model.load_weights(startWeights)
+  File "/home/lenovo/miniconda3/envs/tf/lib/python3.8/site-packages/keras/utils/traceback_utils.py", line 70, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "/home/lenovo/miniconda3/envs/tf/lib/python3.8/site-packages/tensorflow/python/training/py_checkpoint_reader.py", line 31, in error_translator
+    raise errors_impl.NotFoundError(None, None, error_message)
+tensorflow.python.framework.errors_impl.NotFoundError: Unsuccessful TensorSliceReader constructor: Failed to find any matching files for /home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/aubmindlab/bert-base-arabertv2-Vit-B-32
+

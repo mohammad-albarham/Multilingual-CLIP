@@ -5,6 +5,7 @@ def createDataset(targetCaptions, embeddings, batchSize, tokenizer, maxSeqLen=32
                   shuffleSize=None, encoderDims=(1, 768)):
     def generatorFunc():
         while True:
+            num = 0
             embeddings.shuffle()
             for d in embeddings:
                 key, textEmb = d['id'], d['embedding']
@@ -21,6 +22,10 @@ def createDataset(targetCaptions, embeddings, batchSize, tokenizer, maxSeqLen=32
                     padSize = maxSeqLen - len(textIds)
                     textIds = textIds + [0] * padSize
                     attMask = [1] * seqLen + [0] * padSize
+                    num = num + 1
+                    # print("="*100)
+                    # print("Number of examples", num )
+                    # print("="*100)
                     yield textIds, attMask, textEmb
                 except:
                     pass
@@ -41,10 +46,24 @@ def createDataset(targetCaptions, embeddings, batchSize, tokenizer, maxSeqLen=32
                                              output_shapes=(
                                                  (maxSeqLen,), (maxSeqLen,), encoderDims),
                                              )
-
+    dataset
     if (shuffleSize is not None):
         dataset = dataset.shuffle(shuffleSize)
     dataset = dataset.map(_parse_function).batch(batchSize)
+
+    # print("="*100)
+
+    # # Iterate through the dataset and count the elements
+    # # dataset_length = sum(1 for _ in dataset)
+    # # print("Dataset length:", tf.data.experimental.cardinality(dataset).numpy())
+    # # print("Dataset length:", dataset_length)
+    # print(dir(dataset))
+    # # cardinality = tf.data.experimental.cardinality(dataset)
+    # # print((cardinality == tf.data.experimental.INFINITE_CARDINALITY).numpy())
+    # # print((cardinality == tf.data.experimental.UNKNOWN_CARDINALITY).numpy())
+
+    # # print("dataset: ", dataset)
+    # print("="*100)
 
     return dataset
 
@@ -55,5 +74,7 @@ def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize
                                loopForever=False, maxSeqLen=maxSeqLen, encoderDims=encoderDims)
     trainDataset = createDataset(targetCaptions, trainEmbeddings, batchSize, tokenizer,
                                  loopForever=True, maxSeqLen=maxSeqLen, encoderDims=encoderDims)
+
+
 
     return trainDataset, valDataset

@@ -2,9 +2,9 @@ import transformers
 
 
 class MCLIPConfig(transformers.PretrainedConfig):
-    model_type = "M-CLIP"
+    model_type = "bert"
 
-    def __init__(self, modelBase='xlm-roberta-large', transformerDimSize=1024, imageDimSize=768, **kwargs):
+    def __init__(self, modelBase='bert-base-arabertv2', transformerDimSize=768, imageDimSize=512, **kwargs):
         self.transformerDimensions = transformerDimSize
         self.numDims = imageDimSize
         self.modelBase = modelBase

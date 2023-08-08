@@ -1,0 +1,33 @@
+(tf) lenovo@lenovo-ThinkStation-P920:~/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning$ python3 ConvertTrainingModelToPT.py
+2023-07-27 14:05:50.577245: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-07-27 14:05:51.393052: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2023-07-27 14:05:57.101444: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1635] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 30522 MB memory:  -> device: 0, name: Quadro GV100, pci bus id: 0000:18:00.0, compute capability: 7.0
+
+
+
+
+
+
+
+Some weights of the PyTorch model were not used when initializing the TF 2.0 model TFBertModel: ['cls.predictions.decoder.weight', 'cls.seq_relationship.bias', 'cls.predictions.decoder.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.weight', 'cls.predictions.bias', 'cls.predictions.transform.dense.bias', 'bert.embeddings.position_ids']
+- This IS expected if you are initializing TFBertModel from a PyTorch model trained on another task or with another architecture (e.g. initializing a TFBertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing TFBertModel from a PyTorch model that you expect to be exactly identical (e.g. initializing a TFBertForSequenceClassification model from a BertForSequenceClassification model).
+All the weights of TFBertModel were initialized from the PyTorch model.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use TFBertModel for predictions without further training.
+2023-07-27 17:09:39.185720: W tensorflow/core/util/tensor_slice_reader.cc:97] Could not open /home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/aubmindlab/checkpoint: DATA_LOSS: not an sstable (bad magic number): perhaps your file is in a different file format and you need to use a different restore operator?
+Traceback (most recent call last):
+  File "ConvertTrainingModelToPT.py", line 50, in <module>
+    splitAndStoreTFModelToDisk(transformerBase, weightsPath, visualDimensionSpace, modelSaveBase)
+  File "ConvertTrainingModelToPT.py", line 31, in splitAndStoreTFModelToDisk
+    model.load_weights(weightsPath).expect_partial()
+  File "/home/lenovo/miniconda3/envs/tf/lib/python3.8/site-packages/keras/utils/traceback_utils.py", line 70, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "/home/lenovo/miniconda3/envs/tf/lib/python3.8/site-packages/keras/saving/legacy/save.py", line 476, in load_weights
+    raise ValueError(
+ValueError: Unable to load weights saved in HDF5 format into a subclassed Model which has not created its variables yet. Call the Model first, then load the weights.
+(tf) lenovo@lenovo-ThinkStation-P920:~/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning$ 
+(tf) lenovo@lenovo-ThinkStation-P920:~/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning$ 
+(tf) lenovo@lenovo-ThinkStation-P920:~/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning$ 
+(tf) lenovo@lenovo-ThinkStation-P920:~/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning$ 
+

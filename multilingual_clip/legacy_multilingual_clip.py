@@ -13,7 +13,7 @@ class MultilingualClip(torch.nn.Module):
 
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer_name, cache_dir=cache_dir)
         self.transformer = transformers.AutoModel.from_pretrained(model_name, cache_dir=cache_dir)
-        self.clip_head = torch.nn.Linear(in_features=768, out_features=640)
+        self.clip_head = torch.nn.Linear(in_features=768, out_features=512)
         self._load_head()
 
     def forward(self, txt):
@@ -60,6 +60,7 @@ AVAILABLE_MODELS = {
         'tokenizer_name': 'M-CLIP/M-BERT-Base-ViT-B',
         'head_name': 'M-BERT-Base-69-ViT Linear Weights.pkl'
     },
+
 }
 
 
