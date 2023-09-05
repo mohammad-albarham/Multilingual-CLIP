@@ -9,21 +9,22 @@ import datasets
 import Utils
 import datetime
 
-def loadTextTranslations():
-    dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/mscoco_2014_en_ar_mapping')['train']
-    print("="*100)
-    print("len(dataset_Translations_arabic)", len(dataset_Translations_arabic))
-    print("="*100)
-    return dataset_Translations_arabic
+# def loadTextTranslations():
+#     dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/mscoco_2014_en_ar_mapping')['train']
+#     print("="*100)
+#     print("len(dataset_Translations_arabic)", len(dataset_Translations_arabic))
+#     print("="*100)
+#     return dataset_Translations_arabic
 
 def loadTargetEmbeddings(imageBase="Vit-B-32"):
 
-    validationSize = 1
+    print("Start loading the embeddings ..... ")
+    # validationSize = 1
     
     trainSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
-                                         split='train[:{}]'.format(validationSize))
+                                         split='train')
     valSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
-                                       split='validation[:{}]'.format(validationSize)) # 
+                                       split='validation') # 
 
     print("="*100)
     print("len(trainSamples)", len(trainSamples)) # len(trainSamples) 1995000
@@ -34,6 +35,8 @@ def loadTargetEmbeddings(imageBase="Vit-B-32"):
     print("embeddingShape of one of the embeddings of the trainsamples: ", embeddingShape)
     print("="*100)
 
+    print("End loading the embeddings ..... ")
+
     return trainSamples, valSamples, embeddingShape
 
 
@@ -41,9 +44,9 @@ def singleGPUTraining():
     # options = tf.data.Options()
     # options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
     # numValidationSamples = 5000 
-    stepsPerEpoch, lr = 1, 0.00001 # 2213 # 566405/256 = 2212.51953125 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
-    gradAccumSteps, batchSize = 1, 1 # 256
-    numTrainSteps, numWarmupSteps = 1, 1 # 1
+    stepsPerEpoch, lr = 2213, 0.00001 # 2213 # 566405/256 = 2212.51953125 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    gradAccumSteps, batchSize = 1, 256 # 256
+    numTrainSteps, numWarmupSteps = 99999999, 1000 # 1
 
     modelBase = 'aubmindlab/bert-base-arabertv2'
     tokenizerBase = 'aubmindlab/bert-base-arabertv2'
@@ -52,9 +55,9 @@ def singleGPUTraining():
 
     startWeights = None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
 
-    targetCaptions = loadTextTranslations()
+    # targetCaptions = loadTextTranslations()
 
-    print("")
+    # print("")
     
     trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(imageBase=imageBase)
 
@@ -66,6 +69,7 @@ def singleGPUTraining():
             return Utils.GradientAccumulator(optimizer, gradAccumSteps)
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizerBase)
+
     print("="*100)
     print("imageEncoderDimensions[-1]: ", imageEncoderDimensions[-1])
     print("="*100)
@@ -80,14 +84,13 @@ def singleGPUTraining():
 
 
 
-
     model.compile(createOptimizerFunc(), loss='mse', metrics=['mae', 'cosine_similarity']) # I added the loss argument
 
     trainDataset, valDataset = Dataset.createTrainingAndValidationDataset(trainEmbeddings, 
                                                                           valEmbeddings, 
                                                                           batchSize,
                                                                           tokenizer,
-                                                                          targetCaptions=targetCaptions,
+                                                                        #   targetCaptions=None,
                                                                           maxSeqLen = 64,
                                                                           encoderDims=imageEncoderDimensions)
 
@@ -191,10 +194,10 @@ def singleGPUTraining():
                   Utils.CustomSaveCallBack(modelName, saveInterval=1, firstSavePoint=1),
                   tensorboard_callback,
                   WandbMetricsLogger(log_freq="batch"),
-                  WandbModelCheckpoint(filepath="bert-base-arabertv2-Vit-B-32-{epoch:02d}-{val_loss:.2f}", monitor="val_loss", verbose=1),
+                  WandbModelCheckpoint(filepath="bert-base-arabertv2-Vit-B-32-epoch_{epoch:02d}-val_loss_{val_loss:.2f}-wandb-model-" + datetime.datetime.now().strftime("%Y %m %d - %H %M %S"), monitor="val_loss", verbose=1),
               ],
-              verbose=0,
-              workers=56
+            #   verbose=0,
+              workers=112
               )
     
     print("End model.fit")
@@ -202,7 +205,7 @@ def singleGPUTraining():
 
     print("="*100)
     print("Saving model ......................")
-    saveNameBase = 'arabic-arabert-Vit-B-32'
+    saveNameBase = 'arabic-arabert-Vit-B-32' + datetime.datetime.now().strftime("%Y %m %d - %H %M %S")
 
     tokenizer.save_pretrained(saveNameBase + '-Tokenizer-after-finish-training')
     model.transformer.save_pretrained(saveNameBase + '-Transformer-after-finish-training')
@@ -219,7 +222,7 @@ def singleGPUTraining():
     print(model.postTransformation.get_weights())
     import pickle
     # Save the layer using pickle
-    pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/checkpoints_mscoco_pickle/postTransformation_layer_linear_latest_after_finish_training.pickle'
+    pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/checkpoints_mscoco_pickle/postTransformation_layer_linear_latest_after_finish_training_' + datetime.datetime.now().strftime("%Y %m %d - %H %M %S") + "_.pickle"
     with open(pickle_file_path, 'wb') as pickle_file:
         pickle.dump(model.postTransformation.get_weights(), pickle_file)
     stringlist = []

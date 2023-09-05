@@ -61,12 +61,15 @@ class CustomSaveCallBack(tf.keras.callbacks.Callback):
         self.saveCounter = 0
 
     def on_epoch_end(self, epoch, logs=None):
+        print("on_epoch_end saving, epoch num is: ", epoch )
         if (epoch + 1 >= self.firstSavePoint):
+            print("(epoch + 1 >= self.firstSavePoint): ", epoch + 1)
+            
             if (self.saveCounter % self.saveInterval == 0):
-                print("Saving model at {} !".format(epoch + 1))
+                print("Saving model as {} from keras callback!".format(self.saveName.format(epoch + 1) + "_internal_" + '.keras'))
                 print(self.saveName.format(epoch + 1))
                 # self.model.save_weights(self.saveName.format(epoch + 1)) #  + '.h5')
-                self.model.save(self.saveName.format(epoch + 1) + '.keras') 
+                self.model.save(self.saveName.format(epoch + 1) + "_internal_" + '.keras') 
 
             self.saveCounter += 1
 
