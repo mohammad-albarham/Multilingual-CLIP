@@ -128,3 +128,8 @@ dmypy.json
 
 
 /multilingual_clip/TeacherLearning/training_v1_files/*
+
+
+*/logs/*
+
+*/wandb/*

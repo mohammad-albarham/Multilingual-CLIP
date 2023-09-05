@@ -1,0 +1,82 @@
+wandb_version: 1
+
+stepsPerEpoch:
+  desc: null
+  value: 1
+lr:
+  desc: null
+  value: 1.0e-05
+gradAccumSteps:
+  desc: null
+  value: 1
+batchSize:
+  desc: null
+  value: 256
+numTrainSteps:
+  desc: null
+  value: 99999999
+numWarmupSteps:
+  desc: null
+  value: 1000
+loss:
+  desc: null
+  value: mse
+metrics:
+  desc: null
+  value: mae, cosine_similarity
+modelBase:
+  desc: null
+  value: aubmindlab/bert-base-arabertv2
+tokenizerBase:
+  desc: null
+  value: aubmindlab/bert-base-arabertv2
+imageBase:
+  desc: null
+  value: Vit-B-32
+_wandb:
+  desc: null
+  value:
+    python_version: 3.8.17
+    cli_version: 0.15.9
+    framework: huggingface
+    huggingface_version: 4.31.0
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1693823828.623937
+    t:
+      1:
+      - 1
+      - 2
+      - 3
+      - 5
+      - 11
+      - 49
+      - 51
+      - 53
+      - 55
+      2:
+      - 1
+      - 2
+      - 3
+      - 5
+      - 11
+      - 49
+      - 51
+      - 53
+      - 55
+      3:
+      - 7
+      - 13
+      - 16
+      - 23
+      - 38
+      - 39
+      4: 3.8.17
+      5: 0.15.9
+      6: 4.31.0
+      8:
+      - 5
+    m:
+    - 1: batch/batch_step
+      6:
+      - 3

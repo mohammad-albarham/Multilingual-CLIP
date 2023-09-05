@@ -1,22 +1,29 @@
+import wandb
+from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
+import random
+
 import Dataset, TrainingModel
 import tensorflow as tf
 import transformers
 import datasets
 import Utils
-
+import datetime
 
 def loadTextTranslations():
-    dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic')['train']
+    dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/mscoco_2014_en_ar_mapping')['train']
     print("="*100)
     print("len(dataset_Translations_arabic)", len(dataset_Translations_arabic))
     print("="*100)
     return dataset_Translations_arabic
 
-def loadTargetEmbeddings(imageBase="Vit-B-32", validationSize=5000):
-    trainSamples = datasets.load_dataset('M-CLIP/ImageCaptions-7M-Embeddings', imageBase,
-                                         split='train[{}:]'.format(validationSize))
-    valSamples = datasets.load_dataset('M-CLIP/ImageCaptions-7M-Embeddings', imageBase,
-                                       split='train[:{}]'.format(validationSize)) # 
+def loadTargetEmbeddings(imageBase="Vit-B-32"):
+
+    validationSize = 1
+    
+    trainSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
+                                         split='train[:{}]'.format(validationSize))
+    valSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
+                                       split='validation[:{}]'.format(validationSize)) # 
 
     print("="*100)
     print("len(trainSamples)", len(trainSamples)) # len(trainSamples) 1995000
@@ -31,20 +38,25 @@ def loadTargetEmbeddings(imageBase="Vit-B-32", validationSize=5000):
 
 
 def singleGPUTraining():
-    numValidationSamples = 5000 
-    stepsPerEpoch, lr = 2, 0.00001 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
-    gradAccumSteps, batchSize = 1, 256
-    numTrainSteps, numWarmupSteps = 99999999, 1000
+    # options = tf.data.Options()
+    # options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
+    # numValidationSamples = 5000 
+    stepsPerEpoch, lr = 1, 0.00001 # 2213 # 566405/256 = 2212.51953125 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    gradAccumSteps, batchSize = 1, 1 # 256
+    numTrainSteps, numWarmupSteps = 1, 1 # 1
 
     modelBase = 'aubmindlab/bert-base-arabertv2'
     tokenizerBase = 'aubmindlab/bert-base-arabertv2'
     imageBase = "Vit-B-32"
     modelName = "bert-base-arabertv2-Vit-B-32-{}" # '{}-{}'.format(modelBase, imageBase)
 
-    startWeights = "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
+    startWeights = None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
+
     targetCaptions = loadTextTranslations()
+
     print("")
-    trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(validationSize=numValidationSamples)
+    
+    trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(imageBase=imageBase)
 
     def createOptimizerFunc():
         optimizer, schedule = transformers.optimization_tf.create_optimizer(lr, numTrainSteps, numWarmupSteps)
@@ -66,12 +78,19 @@ def singleGPUTraining():
         model.load_weights(startWeights)
         print("="*100)
 
+
+
+
     model.compile(createOptimizerFunc(), loss='mse', metrics=['mae', 'cosine_similarity']) # I added the loss argument
 
-    trainDataset, valDataset = Dataset.createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize,
+    trainDataset, valDataset = Dataset.createTrainingAndValidationDataset(trainEmbeddings, 
+                                                                          valEmbeddings, 
+                                                                          batchSize,
                                                                           tokenizer,
                                                                           targetCaptions=targetCaptions,
+                                                                          maxSeqLen = 64,
                                                                           encoderDims=imageEncoderDimensions)
+
 
     # from datasets import push_to_hub
 
@@ -80,9 +99,9 @@ def singleGPUTraining():
     if (gradAccumSteps > 1):  # In order to make fair logging on Wandb
         stepsPerEpoch *= gradAccumSteps
 
-    print("="*500)
-    print(model.postTransformation.get_weights())
-    print("="*500)
+    # print("="*500)
+    # print(model.postTransformation.get_weights())
+    # print("="*500)
     # # Specify the path where you want to save the pickle file
     # pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/postTransformation_layer.pickle'
 
@@ -130,24 +149,68 @@ def singleGPUTraining():
 
     print("="*500)
 
+    #TODO Adding the logs to TensorBoard
+
+    log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y %m %d - %H %M %S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, update_freq="epoch")
+
+
+
+    #### Configure the WandB
+    display_name = "experiment-2023-09-04-arabert-base-Vit-32-" +  datetime.datetime.now().strftime("%Y %m %d - %H %M %S")
+
+        # Start a run, tracking hyperparameters
+    run = wandb.init(
+        # set the wandb project where this run will be logged
+        project="mscoco_teacher_learning_full_data",
+
+        name=display_name,
+
+        # track hyperparameters and run metadata with wandb.config
+        config={
+            "stepsPerEpoch": stepsPerEpoch,
+            "lr": lr,
+            "gradAccumSteps": gradAccumSteps,
+            "batchSize": batchSize,
+            "numTrainSteps": numTrainSteps,
+            "numWarmupSteps": numWarmupSteps,
+            "loss": "mse",
+            "metrics": "mae, cosine_similarity",
+            "modelBase": modelBase,
+            "tokenizerBase": tokenizerBase,
+            "imageBase": imageBase
+        },
+    )
+
+    print("Start model.fit")
+    print("trainDataset sample: ", next(iter(trainDataset)))
+
     model.fit(trainDataset, epochs=1, steps_per_epoch=stepsPerEpoch,
               validation_data=valDataset,
               callbacks=[
                   Utils.CustomSaveCallBack(modelName, saveInterval=1, firstSavePoint=1),
-              ]
+                  tensorboard_callback,
+                  WandbMetricsLogger(log_freq="batch"),
+                  WandbModelCheckpoint(filepath="bert-base-arabertv2-Vit-B-32-{epoch:02d}-{val_loss:.2f}", monitor="val_loss", verbose=1),
+              ],
+              verbose=0,
+              workers=56
               )
+    
+    print("End model.fit")
+
 
     print("="*100)
     print("Saving model ......................")
     saveNameBase = 'arabic-arabert-Vit-B-32'
 
-    tokenizer.save_pretrained(saveNameBase + '-Tokenizer')
-    model.transformer.save_pretrained(saveNameBase + '-Transformer')
+    tokenizer.save_pretrained(saveNameBase + '-Tokenizer-after-finish-training')
+    model.transformer.save_pretrained(saveNameBase + '-Transformer-after-finish-training')
 
     
-    ptFormer = transformers.AutoModel.from_pretrained(saveNameBase + '-Transformer', from_tf=True, device_map="cpu")
+    # ptFormer = transformers.AutoModel.from_pretrained(saveNameBase + '-Transformer-after-finish-training', from_tf=True, device_map="cpu")
 
-    ptFormer.save_pretrained(saveNameBase + "-PT")
+    # ptFormer.save_pretrained(saveNameBase + "-PT")
 
     print("Saving model ......................")
     
@@ -156,7 +219,7 @@ def singleGPUTraining():
     print(model.postTransformation.get_weights())
     import pickle
     # Save the layer using pickle
-    pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/postTransformation_layer_linear_latest.pickle'
+    pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/checkpoints_mscoco_pickle/postTransformation_layer_linear_latest_after_finish_training.pickle'
     with open(pickle_file_path, 'wb') as pickle_file:
         pickle.dump(model.postTransformation.get_weights(), pickle_file)
     stringlist = []
@@ -164,6 +227,12 @@ def singleGPUTraining():
     short_model_summary = "\n".join(stringlist)
     print(short_model_summary)
     print("="*100)
+
+    # wandb.alert(
+    # title="The training is finished"
+    # )
+
+    wandb.finish()
 
 if __name__ == '__main__':
     strategy = tf.distribute.MirroredStrategy()

@@ -3,42 +3,70 @@ import tensorflow as tf
 
 def createDataset(targetCaptions, embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=True,
                   shuffleSize=None, encoderDims=(1, 768)):
+    print("Start createDataset")
     def generatorFunc():
         while True:
+            print("Start while")
             num = 0
             embeddings.shuffle()
+
+            print("Finishing shuffle")
+
+            # print("Sample of embeddings: ", embeddings[0])
+            print("len(embeddings): ", len(embeddings))
+
+            # Looping over all embeddings on the dataset
+
             for d in embeddings:
+
+                print("Inside for loop shuffle")
+
                 key, textEmb = d['id'], d['embedding']
-                try:
-                    caption = targetCaptions[key]['caption_multi']
-                    if (caption is None):
-                        continue
+                # try:
+                print("Inside the try: ")
 
-                    textIds = tokenizer.encode(caption)
-                    seqLen = len(textIds)
-                    if (seqLen > maxSeqLen):
-                        continue
+                start_with_ar = targetCaptions.filter(lambda example: example["id"]==key)
 
-                    padSize = maxSeqLen - len(textIds)
-                    textIds = textIds + [0] * padSize
-                    attMask = [1] * seqLen + [0] * padSize
-                    num = num + 1
-                    # print("="*100)
-                    # print("Number of examples", num )
-                    # print("="*100)
-                    yield textIds, attMask, textEmb
-                except:
-                    pass
+                caption = start_with_ar['ar_caption'] # targetCaptions[key]['ar_caption'] #  caption_multi
+
+                print("key: ", key)
+                print("caption: ", caption)
+
+                if (caption is None):
+                    continue
+
+                textIds = tokenizer.encode(caption[0])
+                seqLen = len(textIds)
+                
+                if (seqLen > maxSeqLen):
+                    continue
+
+                padSize = maxSeqLen - len(textIds)
+                textIds = textIds + [0] * padSize
+                attMask = [1] * seqLen + [0] * padSize
+                num = num + 1
+                print("="*100)
+                print("Number of examples", num )
+                print("="*100)
+                yield textIds, attMask, textEmb
+                # except:
+                #     print("Inside the except: ")
+                #     pass
 
             if (loopForever == False):
                 break
+        
+        print("End createDataset")
 
-    f = lambda x, y=tf.float32: tf.convert_to_tensor(x, y)
+    print("Decalre f: ")
+    f = lambda x, y = tf.float32: tf.convert_to_tensor(x, y)
 
     def _parse_function(textIds, attMask, textEmb):
         textIDs, att = f(textIds, tf.int32), f(attMask)
         tEmb = f(textEmb)
         return (textIDs, att), tEmb[0]
+
+    print("_parse_function")
 
     dataset = tf.data.Dataset.from_generator(generatorFunc,
                                              output_types=(
@@ -46,7 +74,7 @@ def createDataset(targetCaptions, embeddings, batchSize, tokenizer, maxSeqLen=32
                                              output_shapes=(
                                                  (maxSeqLen,), (maxSeqLen,), encoderDims),
                                              )
-    dataset
+    # dataset
     if (shuffleSize is not None):
         dataset = dataset.shuffle(shuffleSize)
     dataset = dataset.map(_parse_function).batch(batchSize)
@@ -65,6 +93,7 @@ def createDataset(targetCaptions, embeddings, batchSize, tokenizer, maxSeqLen=32
     # # print("dataset: ", dataset)
     # print("="*100)
 
+    print("Return dataset")
     return dataset
 
 
@@ -76,5 +105,7 @@ def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize
                                  loopForever=True, maxSeqLen=maxSeqLen, encoderDims=encoderDims)
 
 
+    print("Return trainDataset: ", trainDataset)
+    print("Return valDataset: ", valDataset)
 
     return trainDataset, valDataset
