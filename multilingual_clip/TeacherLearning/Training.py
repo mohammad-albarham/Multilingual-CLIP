@@ -188,7 +188,7 @@ def singleGPUTraining():
     print("Start model.fit")
     print("trainDataset sample: ", next(iter(trainDataset)))
 
-    model.fit(trainDataset, epochs=1, steps_per_epoch=stepsPerEpoch,
+    model.fit(trainDataset, epochs=20, steps_per_epoch=stepsPerEpoch,
               validation_data=valDataset,
               callbacks=[
                   Utils.CustomSaveCallBack(modelName, saveInterval=1, firstSavePoint=1),
