@@ -5,18 +5,22 @@ import datasets
 import Utils
 
 
-def loadTextTranslations():
-    dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic')['train']
-    print("="*100)
-    print("len(dataset_Translations_arabic)", len(dataset_Translations_arabic))
-    print("="*100)
-    return dataset_Translations_arabic
+# def loadTextTranslations():
+#     dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic')['train']
+#     print("="*100)
+#     print("len(dataset_Translations_arabic)", len(dataset_Translations_arabic))
+#     print("="*100)
+#     return dataset_Translations_arabic
 
-def loadTargetEmbeddings(imageBase="Vit-B-32", validationSize=5000):
-    trainSamples = datasets.load_dataset('M-CLIP/ImageCaptions-7M-Embeddings', imageBase,
-                                         split='train[{}:]'.format(validationSize))
-    valSamples = datasets.load_dataset('M-CLIP/ImageCaptions-7M-Embeddings', imageBase,
-                                       split='train[:{}]'.format(validationSize)) # 
+def loadTargetEmbeddings(imageBase="Vit-B-32"):
+
+    print("Start loading the embeddings ..... ")
+    # validationSize = 1
+    
+    trainSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
+                                         split='train')
+    valSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
+                                       split='validation') # 
 
     print("="*100)
     print("len(trainSamples)", len(trainSamples)) # len(trainSamples) 1995000
@@ -27,12 +31,15 @@ def loadTargetEmbeddings(imageBase="Vit-B-32", validationSize=5000):
     print("embeddingShape of one of the embeddings of the trainsamples: ", embeddingShape)
     print("="*100)
 
+    print("End loading the embeddings ..... ")
+
     return trainSamples, valSamples, embeddingShape
+
 
 
 def singleGPUTraining():
     numValidationSamples = 5000 
-    stepsPerEpoch, lr = 2, 0.00001 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    stepsPerEpoch, lr = 2213, 0.00001 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
     gradAccumSteps, batchSize = 1, 256
     numTrainSteps, numWarmupSteps = 99999999, 1000
 
@@ -41,10 +48,10 @@ def singleGPUTraining():
     imageBase = "Vit-B-32"
     modelName = "bert-base-arabertv2-Vit-B-32-{}" # '{}-{}'.format(modelBase, imageBase)
 
-    startWeights = "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
-    targetCaptions = loadTextTranslations()
+    startWeights = None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
+    # targetCaptions = loadTextTranslations()
     print("")
-    trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(validationSize=numValidationSamples)
+    trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings()
 
     def createOptimizerFunc():
         optimizer, schedule = transformers.optimization_tf.create_optimizer(lr, numTrainSteps, numWarmupSteps)
@@ -70,7 +77,7 @@ def singleGPUTraining():
 
     trainDataset, valDataset = Dataset.createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize,
                                                                           tokenizer,
-                                                                          targetCaptions=targetCaptions,
+                                                                          # targetCaptions=targetCaptions,
                                                                           encoderDims=imageEncoderDimensions)
 
     # from datasets import push_to_hub
@@ -156,7 +163,7 @@ def singleGPUTraining():
     print(model.postTransformation.get_weights())
     import pickle
     # Save the layer using pickle
-    pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/postTransformation_layer_linear_latest.pickle'
+    pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/postTransformation_layer_linear_latest_test.pickle'
     with open(pickle_file_path, 'wb') as pickle_file:
         pickle.dump(model.postTransformation.get_weights(), pickle_file)
     stringlist = []

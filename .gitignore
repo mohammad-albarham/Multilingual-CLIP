@@ -125,3 +125,12 @@ dmypy.json
 # /tools
 /data
 /dumped
+
+
+/multilingual_clip/TeacherLearning/training_v1_files/*
+
+
+*/logs/*
+
+*/wandb/*
+*.pickle
