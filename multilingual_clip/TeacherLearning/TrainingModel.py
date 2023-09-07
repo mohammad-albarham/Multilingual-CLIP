@@ -16,9 +16,9 @@ class SentenceModel(tf.keras.Model):
         outAtt = tf.cast(att, tf.float32)
         sampleLength = tf.reduce_sum(outAtt, axis=-1, keepdims=True)
         maskedEmbs = embs * tf.expand_dims(outAtt, axis=-1)
-        # print("="*100)
-        # print("Training arg in generateSingleEmbedding of SentenceModel class: ", training)
-        # print("="*100)
+        print("="*100)
+        print("Training arg in generateSingleEmbedding of SentenceModel class: ", training)
+        print("="*100)
         return tf.reduce_sum(maskedEmbs, axis=1) / tf.cast(sampleLength, tf.float32)
 
     @tf.function

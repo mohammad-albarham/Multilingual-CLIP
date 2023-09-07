@@ -10,7 +10,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
     def generatorFunc():
         while True:
             # print("Start while")
-            num = 0
+            # num = 0
             embeddings.shuffle()
 
             # print("Finishing shuffle")
@@ -49,7 +49,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
                 padSize = maxSeqLen - len(textIds)
                 textIds = textIds + [0] * padSize
                 attMask = [1] * seqLen + [0] * padSize
-                num = num + 1
+                # num = num + 1
                 # print("="*100)
                 # print("Number of examples", num )
                 # print("="*100)
