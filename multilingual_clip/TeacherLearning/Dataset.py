@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tqdm import tqdm
 
-def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=True,
+def createDataset(targetCaptions,embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=True,
                   shuffleSize=None, encoderDims=(1, 768)):
     # print("Start createDataset")
 
@@ -19,14 +19,14 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
             # print("len(embeddings): ", len(embeddings))
 
             # Looping over all embeddings on the dataset
-
+            print()
             print("Start looping on Full data")
 
             for d in embeddings:
 
                 # print("Inside for loop shuffle")
 
-                textEmb,caption = d['embedding'], d['ar_caption']
+                textEmb, caption = d['embedding'], d['ar_caption']
                 # try:
                 # print("Inside the try: ")
 
@@ -60,7 +60,8 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
 
             if (loopForever == False):
                 break
-
+            
+            print()
             print("Finish looping on Full data")
         
         # print("End createDataset")
@@ -104,8 +105,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
     return dataset
 
 
-def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize, tokenizer,
-                                       maxSeqLen=32, encoderDims=(1, 768)):
+def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize, tokenizer, maxSeqLen=32, encoderDims=(1, 768)):
     
     print("validation set loading, start: .....")
     valDataset = createDataset(valEmbeddings, batchSize, tokenizer,
