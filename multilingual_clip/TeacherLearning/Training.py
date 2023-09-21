@@ -12,34 +12,53 @@ import datetime
 from transformers import BertTokenizer, TFBertModel
 from rich import print
 
-# def loadTextTranslations():
-#     dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic')['train']
-#     print("="*100)
-#     print("len(dataset_Translations_arabic)", len(dataset_Translations_arabic))
-#     print("="*100)
-#     return dataset_Translations_arabic
-def loadTargetEmbeddings(imageBase="Vit-B-32"):
+def loadTextTranslations():
+    dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic')['train']
+    print("="*100)
+    print("len(dataset_Translations_arabic)", len(dataset_Translations_arabic))
+    print("="*100)
+    return dataset_Translations_arabic
 
-    print("Start loading the embeddings ..... ")
-    # validationSize = 1
-    
-    trainSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
-                                         split='train')
-    valSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
-                                       split='validation') # 
+def loadTargetEmbeddings(imageBase="Vit-B-32", validationSize=50000):
+
+    trainSamples = datasets.load_dataset('M-CLIP/ImageCaptions-7M-Embeddings', imageBase,
+                                         split='train[{}:]'.format(validationSize))
+    valSamples = datasets.load_dataset('M-CLIP/ImageCaptions-7M-Embeddings', imageBase,
+                                       split='train[:{}]'.format(validationSize)) # 
 
     print("="*100)
-    print("len(trainSamples)", len(trainSamples)) # len(trainSamples) 566405
-    print("len(valSamples)", len(valSamples)) # len(valSamples) 24995
+    print("len(trainSamples)", len(trainSamples)) # len(trainSamples) 1995000
+    print("len(valSamples)", len(valSamples)) # len(valSamples) 5000
 
     embeddingShape = tf.convert_to_tensor(trainSamples[0]['embedding']).shape # (1, 512)
 
     print("embeddingShape of one of the embeddings of the trainsamples: ", embeddingShape)
     print("="*100)
 
-    print("End loading the embeddings ..... ")
-
     return trainSamples, valSamples, embeddingShape
+
+# def loadTargetEmbeddings(imageBase="Vit-B-32"):
+
+#     print("Start loading the embeddings ..... ")
+#     # validationSize = 1
+    
+#     trainSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
+#                                          split='train') #[:{}]'.format(validationSize))
+#     valSamples = datasets.load_dataset('Arabic-Clip/mscoco_jsonl_full', imageBase,
+#                                        split='validation') # [:{}]'.format(validationSize))
+
+#     print("="*100)
+#     print("len(trainSamples)", len(trainSamples)) # len(trainSamples) 566405
+#     print("len(valSamples)", len(valSamples)) # len(valSamples) 24995
+
+#     embeddingShape = tf.convert_to_tensor(trainSamples[0]['embedding']).shape # (1, 512)
+
+#     print("embeddingShape of one of the embeddings of the trainsamples: ", embeddingShape)
+#     print("="*100)
+
+#     print("End loading the embeddings ..... ")
+
+#     return trainSamples, valSamples, embeddingShape
 
     # print("="*100)
     # print("len(trainSamples)", len(trainSamples)) # len(trainSamples) 1995000
@@ -59,21 +78,23 @@ def singleGPUTraining():
     # options = tf.data.Options()
     # options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
     # numValidationSamples = 5000 
-    stepsPerEpoch, lr = 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
-    gradAccumSteps, batchSize = 1, 64 # 256
-    numTrainSteps, numWarmupSteps = 177020, 1000 # 1
-    epochs = 20
+    stepsPerEpoch, lr = 10, 0.00005  # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    gradAccumSteps, batchSize = 1, 2 # 1, 2 # 1, 128 # 256
+    epochs = 50
+    numTrainSteps, numWarmupSteps = 58600, 1000 # 1
+    
+    
 
-    modelBase = 'bert-base-multilingual-cased' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
-    tokenizerBase = 'bert-base-multilingual-cased' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
+    modelBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
+    tokenizerBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
     imageBase = "Vit-B-32"
-    modelName = modelBase  + "-" + imageBase + "-" # '{}-{}'.format(modelBase, imageBase) # # modelName = modelBase.split("/")[1]  + "-" + imageBase + "-{}" # '{}-{}'.format(modelBase, imageBase)
+    modelName = "bert-large-arabertv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-" # '{}-{}'.format(modelBase, imageBase) # # modelName = modelBase.split("/")[1]  + "-" + imageBase + "-{}" # '{}-{}'.format(modelBase, imageBase)
 
-    log_name = modelBase  + "-" + imageBase + "-"
+    log_name =  "bert-large-arabertv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-"
     
     startWeights = None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
 
-    # targetCaptions = loadTextTranslations()
+    targetCaptions = loadTextTranslations()
 
     # print("")
     
@@ -100,6 +121,11 @@ def singleGPUTraining():
         model.load_weights(startWeights)
         print("="*100)
 
+    # # Calling `save('my_model.keras')` creates a zip archive `my_model.keras`.
+    #model.save("my_model.keras")
+
+    # It can be used to reconstruct the model identically.
+    #reconstructed_model = keras.models.load_model("my_model.keras")
 
 
     model.compile(createOptimizerFunc(), loss='mse', metrics=['mae', 'cosine_similarity']) # I added the loss argument
@@ -108,10 +134,9 @@ def singleGPUTraining():
                                                                           valEmbeddings, 
                                                                           batchSize,
                                                                           tokenizer,
-                                                                        #   targetCaptions=targetCaptions,
+                                                                          targetCaptions=targetCaptions,
                                                                           maxSeqLen = 64,
-                                                                          encoderDims=imageEncoderDimensions,
-                                                                          num = 0 )
+                                                                          encoderDims=imageEncoderDimensions)
 
 
     # from datasets import push_to_hub
@@ -207,25 +232,30 @@ def singleGPUTraining():
     print("Start model.fit")
     print("trainDataset sample: ", next(iter(trainDataset)))
 
+    # checkpoint_filepath = "model-{epoch:02d}-{val_loss:.2f}"
+    filepath = 'model-ep{epoch:03d}-loss{loss:.3f}'
 
     model.fit(trainDataset, epochs=epochs, steps_per_epoch=stepsPerEpoch,
               validation_data=valDataset,
               callbacks=[
-                  Utils.CustomSaveCallBack(modelName, saveInterval=1, firstSavePoint=1),
-                  tensorboard_callback,
-                  WandbMetricsLogger(log_freq="batch"),
-                  WandbModelCheckpoint(filepath= modelName+ "-{epoch:02d}-{val_loss:.2f}", monitor="val_loss", verbose=1),
+                  Utils.CustomSaveCallBack(modelName, saveInterval=5, firstSavePoint=1,log_name=log_name,tokenizer=tokenizer,model=model),
+                  WandbModelCheckpoint(filepath = filepath, verbose=1,save_freq='epoch', save_best_only=True), #save_freq='epoch'
+                  WandbMetricsLogger(log_freq="epoch"), # epoch
+                  # tensorboard_callback,
+                  
+                # f"{model_config['MODEL_DIR']}/{exp_id}-model-fold{fold_num}-best.h5", "keras_cifar10_{epoch:02d}"
               ],
             #   verbose=0,
             #   workers=1
-              )
+            )
     
     print("End model.fit")
 
 
     print("="*100)
     print("Saving model ......................")
-    saveNameBase = log_name + + datetime.datetime.now().strftime("%Y %m %d - %H %M %S")
+    
+    saveNameBase = log_name + datetime.datetime.now().strftime("%Y %m %d - %H %M %S")
     # dense_weights = dense_layer.get_weights()
     # Access the weights of the postTransformation dense layer using TensorFlow graph
     # graph = tf.compat.v1.get_default_graph()
@@ -235,20 +265,20 @@ def singleGPUTraining():
     model.transformer.save_pretrained(saveNameBase + '-Transformer-after-finish-training')
 
     
-    # ptFormer = transformers.AutoModel.from_pretrained(saveNameBase + '-Transformer-after-finish-training', from_tf=True, device_map="cpu")
+    ptFormer = transformers.AutoModel.from_pretrained(saveNameBase + '-Transformer-after-finish-training', from_tf=True, device_map="cpu")
 
-    # ptFormer.save_pretrained(saveNameBase + "-PT")
+    ptFormer.save_pretrained(saveNameBase + "-PT")
 
     print("Saving model ......................")
     
     print("="*100)
     print("Calling model.summary")
     print(model.postTransformation.get_weights())
-    import pickle
-    # Save the layer using pickle
-    pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/checkpoints_mscoco_pickle/postTransformation_layer_linear_latest_after_finish_training_' + log_name + datetime.datetime.now().strftime("%Y %m %d - %H %M %S") + "_.pickle"
-    with open(pickle_file_path, 'wb') as pickle_file:
-        pickle.dump(model.postTransformation.get_weights(), pickle_file)
+    # import pickle
+    # # Save the layer using pickle
+    # pickle_file_path = '/hom/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/checkpoints_mscoco_pickle/postTransformation_layer_linear_latest_after_finish_training_' + log_name + datetime.datetime.now().strftime("%Y %m %d - %H %M %S") + "_.pickle"
+    # with open(pickle_file_path, 'wb') as pickle_file:
+    #     pickle.dump(model.postTransformation.get_weights(), pickle_file)
     stringlist = []
     model.summary(print_fn=lambda x: stringlist.append(x))
     short_model_summary = "\n".join(stringlist)

@@ -23,7 +23,7 @@ class SentenceModel(tf.keras.Model):
 
     @tf.function
     def generateMultipleEmbeddings(self, input, training=False):
-        print(len(input))
+        # print(len(input))
         inds, att = input
         embs = self.transformer({'input_ids': inds, 'attention_mask': att}, training=training)['last_hidden_state']
         # print("="*100)

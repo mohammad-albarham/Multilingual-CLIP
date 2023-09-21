@@ -7,7 +7,7 @@ import logging
 logging.getLogger("transformers.modeling_tf_utils").setLevel(logging.ERROR)
 
 def convertTFTransformerToPT(saveNameBase):
-    ptFormer = transformers.AutoModel.from_pretrained(saveNameBase, from_tf=True)
+    ptFormer = transformers.AutoModel.from_pretrained(saveNameBase , from_tf=True)
     ptFormer.save_pretrained(saveNameBase + "-PT")
     
     
@@ -23,10 +23,18 @@ def splitAndStoreTFModelToDisk(transformerBase, weightsPath, visualDimensionSpac
     tokenizer = transformers.AutoTokenizer.from_pretrained(transformerBase)
     
     model = TrainingModel.SentenceModelWithLinearTransformation(transformerBase, visualDimensionSpace)
-    
+
     import tensorflow as tf
 
-    new_model = tf.keras.models.load_model('/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/bert-base-arabertv2-Vit-B-32-1.keras')
+    # print("="*100)
+    # print("Already loaded the model ....")
+    # print("="*100)
+
+    # new_model = tf.keras.models.load_model('/home/lenovo/Desktop/arabic_clip/m-bert-base-model_trained/bert-base-multilingual-cased-Vit-B-32- 36_2023 09 14 - 14 28 32_epoch_36_internal_.keras')
+
+    # print("="*100)
+    # print("Finishing loading the model ....")
+    # print("="*100)
 
     # Show the model architecture
     new_model.summary()
@@ -37,7 +45,7 @@ def splitAndStoreTFModelToDisk(transformerBase, weightsPath, visualDimensionSpac
     # model.load_weights(weightsPath).expect_partial()
     # # checkpoint = tf.train.Checkpoint(model)
     # # tf.train.Checkpoint.restore(checkpoint,save_path=weightsPath).expect_partial()
-    saveNameBase = 'arabic-arabert-Vit-B-32'
+    saveNameBase = 'bert-base-multilingual-cased-Vit-B-32-from-keras'
 
     tokenizer.save_pretrained(saveNameBase + '-Tokenizer')
     model.transformer.save_pretrained(saveNameBase + '-Transformer')
@@ -45,7 +53,7 @@ def splitAndStoreTFModelToDisk(transformerBase, weightsPath, visualDimensionSpac
     
     ptFormer = transformers.AutoModel.from_pretrained(saveNameBase + '-Transformer', from_tf=True)
 
-    ptFormer.save_pretrained(saveNameBase + "-PT")
+    ptFormer.save_pretrained(saveNameBase + "-PT" + "-from-keras")
     
     # # model.push_to_hub(repo_id="pain/bert-base-arabertv2-Vit-B-32-using-tf_3")
     # linearWeights = model.postTransformation.get_weights()
@@ -74,10 +82,10 @@ def splitAndStoreTFModelToDisk(transformerBase, weightsPath, visualDimensionSpac
 
 
 if __name__ == '__main__':
-    weightsPath = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32' # '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/bert-base-arabertv2-Vit-B-32-10'
-    transformerBase = 'aubmindlab/bert-base-arabertv2'
-    modelSaveBase = 'arabic-arabert-Vit-B-32'
-    visualDimensionSpace = 512
+    # weightsPath = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32' # '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/bert-base-arabertv2-Vit-B-32-10'
+    # transformerBase = 'bert-base-multilingual-cased'
+    modelSaveBase = '/home/lenovo/Desktop/arabic_clip/convet_model_tf'
+    visualDimensionSpace = 640
 
-    splitAndStoreTFModelToDisk(transformerBase, weightsPath, visualDimensionSpace, modelSaveBase)
-    convertTFTransformerToPT(modelSaveBase + "-Transformer")
+    # splitAndStoreTFModelToDisk(transformerBase, weightsPath, visualDimensionSpace, modelSaveBase)
+    convertTFTransformerToPT(modelSaveBase)
