@@ -1,4 +1,3 @@
-from tensorflow_addons.utils import types
 from typeguard import typechecked
 import tensorflow as tf
 import numpy as np
