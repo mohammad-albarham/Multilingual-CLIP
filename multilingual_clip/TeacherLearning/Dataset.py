@@ -1,30 +1,28 @@
 import tensorflow as tf
 
 
-def createDataset(targetCaptions, embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=True,
+def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=True,
                   shuffleSize=None, encoderDims=(1, 768)):
     def generatorFunc():
         while True:
             embeddings.shuffle()
             # print("start looping over the dataset")
             for d in embeddings:
-                key, textEmb = d['id'], d['embedding']
-                try:
-                    caption = targetCaptions[key]['caption_multi']
-                    if (caption is None):
-                        continue
+                textEmb,caption = d['embeddings'], d["caption"]
+                # caption = targetCaptions[key]['caption_multi']
+                if (caption is None):
+                    continue
 
-                    textIds = tokenizer.encode(caption)
-                    seqLen = len(textIds)
-                    if (seqLen > maxSeqLen):
-                        continue
+                textIds = tokenizer.encode(caption)
+                seqLen = len(textIds)
+                if (seqLen > maxSeqLen):
+                    continue
 
-                    padSize = maxSeqLen - len(textIds)
-                    textIds = textIds + [0] * padSize
-                    attMask = [1] * seqLen + [0] * padSize
-                    yield textIds, attMask, textEmb
-                except:
-                    pass
+                padSize = maxSeqLen - len(textIds)
+                textIds = textIds + [0] * padSize
+                attMask = [1] * seqLen + [0] * padSize
+                yield textIds, attMask, textEmb
+
             # print("Finish looping over the dataset")
             if (loopForever == False):
                 break
@@ -50,21 +48,19 @@ def createDataset(targetCaptions, embeddings, batchSize, tokenizer, maxSeqLen=32
     return dataset
 
 
-def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize, tokenizer, targetCaptions,
+def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize, tokenizer, #targetCaptions,
                                        maxSeqLen=32, encoderDims=(1, 768)):
-    valDataset = createDataset(targetCaptions, valEmbeddings, batchSize, tokenizer,
+    
+    valDataset = createDataset(valEmbeddings, batchSize, tokenizer,
                                loopForever=False, maxSeqLen=maxSeqLen, encoderDims=encoderDims)
 
-    print()
-    print("-"*100)
-    print("valDataset")
-    print(valDataset)
-    print("-"*100)
-    print()
-    trainDataset = createDataset(targetCaptions, trainEmbeddings, batchSize, tokenizer,
+
+    trainDataset = createDataset(trainEmbeddings, batchSize, tokenizer,
                                  loopForever=True, maxSeqLen=maxSeqLen, encoderDims=encoderDims)
 
     return trainDataset, valDataset
+
+
 
 # import tensorflow as tf
 # from tqdm import tqdm
