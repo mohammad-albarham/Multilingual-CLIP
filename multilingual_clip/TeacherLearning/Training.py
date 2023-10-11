@@ -10,7 +10,6 @@ import Utils
 import datetime
 
 from transformers import BertTokenizer, TFBertModel
-from rich import print
 
 # def loadTextTranslations():
 #     dataset_Translations_arabic = datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic')['train']
