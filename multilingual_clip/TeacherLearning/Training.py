@@ -19,16 +19,16 @@ from rich import print
 #     print("="*100)
 #     return dataset_Translations_arabic
 
-def loadTargetEmbeddings(validationSize=5000):
+def loadTargetEmbeddings(validationSize=10):
 
-    trainSamples = datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic-subset-150000', split='train[{}:]'.format(validationSize))
-    valSamples = datasets.load_dataset('Arabic-Clip/ImageCaptions-7M-Translations-Arabic-subset-150000', split='train[:{}]'.format(validationSize))
+    trainSamples = datasets.load_dataset('Arabic-Clip/Arabic_dataset_1M_translated_jsonl_format_ViT-B-16-plus-240', split='train[{}:20]'.format(10))
+    valSamples = datasets.load_dataset('Arabic-Clip/Arabic_dataset_1M_translated_jsonl_format_ViT-B-16-plus-240', split='train[:{}]'.format(10))
 
     print("="*100)
     print("len(trainSamples)", len(trainSamples)) # len(trainSamples) 1995000
     print("len(valSamples)", len(valSamples)) # len(valSamples) 5000
 
-    embeddingShape = tf.convert_to_tensor(trainSamples[0]['embeddings']).shape # (1, 512)
+    embeddingShape = tf.convert_to_tensor(trainSamples[0]['embedding']).shape # (1, 640)
 
     print("embeddingShape of one of the embeddings of the trainsamples: ", embeddingShape)
 
@@ -79,14 +79,14 @@ def singleGPUTraining():
     # numValidationSamples = 5000 
 
     # Tune the hyperparameter 
-    stepsPerEpoch, lr = 1133, 0.00001  # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    stepsPerEpoch, lr = 10, 0.00001  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
     gradAccumSteps, batchSize = 1, 128 # 1, 2 # 1, 128 # 256
-    epochs = 150
-    numTrainSteps, numWarmupSteps = 169950, 1000 # 1
+    epochs = 10
+    numTrainSteps, numWarmupSteps = 1562600, 1000 # 1
     
     modelBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
     tokenizerBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
-    imageBase = "Vit-B-32"
+    imageBase = "Vit-B-16-plus-240"
     modelName = "bert-large-arabertv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-" # '{}-{}'.format(modelBase, imageBase) # # modelName = modelBase.split("/")[1]  + "-" + imageBase + "-{}" # '{}-{}'.format(modelBase, imageBase)
 
     log_name =  "bert-large-arabertv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-"
@@ -236,8 +236,8 @@ def singleGPUTraining():
     model.fit(trainDataset, epochs=epochs, steps_per_epoch=stepsPerEpoch,
               validation_data=valDataset,
               callbacks=[
-                  Utils.CustomSaveCallBack(modelName, saveInterval=5, firstSavePoint=1,log_name=log_name,tokenizer=tokenizer,model=model),
-                  WandbModelCheckpoint(filepath = filepath, verbose=1, save_freq='epoch', save_best_only=True), #save_freq='epoch'
+                  Utils.CustomSaveCallBack(modelName, saveInterval=5,firstSavePoint=0, log_name=log_name,tokenizer=tokenizer,model=model),
+                #   WandbModelCheckpoint(filepath = filepath, verbose=1, save_freq='epoch', save_best_only=True), #save_freq='epoch'
                   WandbMetricsLogger(log_freq="epoch"), # epoch
                   # tensorboard_callback,
                   
@@ -290,6 +290,7 @@ def singleGPUTraining():
     wandb.finish()
 
 if __name__ == '__main__':
+    # https://www.tensorflow.org/guide/keras/distributed_training#introduction
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
     	singleGPUTraining()

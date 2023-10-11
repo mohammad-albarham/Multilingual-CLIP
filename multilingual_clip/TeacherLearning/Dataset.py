@@ -8,7 +8,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
             embeddings.shuffle()
             # print("start looping over the dataset")
             for d in embeddings:
-                textEmb,caption = d['embeddings'], d["caption"]
+                textEmb,caption = d['embedding'], d["ar_caption"]
                 # caption = targetCaptions[key]['caption_multi']
                 if (caption is None):
                     continue
