@@ -41,15 +41,36 @@ import pickle
 # pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/arabic-arabert-Vit-B-32-Linear-Weights.pkl'
 # pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/arabic-arabert-Vit-B-32-Linear-Weights.pkl'
 # pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_backup/Vit-B-32-Linear-Weights.pkl'
-pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/postTransformation_layer_linear_latest.pickle'
+# pickle_file_path = '/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/multiple_checkpoints/postTransformation_layer_linear_latest.pickle'
+# pickle_file_path = "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/heads_of_the_model_bert-large-arabertv2-Vit-B-16-plus-240-36_.pickle"
 
-with open(pickle_file_path, 'rb') as file:
-    loaded_content = pickle.load(file)
-    print(loaded_content)
-    print(len(loaded_content))
-    print(loaded_content[0].shape)
-    print(loaded_content[1].shape)
+# with open(pickle_file_path, 'rb') as file:
+#     loaded_content = pickle.load(file)
+#     print(loaded_content)
+#     print(len(loaded_content))
+#     print(loaded_content[0].shape)
+#     print(loaded_content[1].shape)
+from keras.layers import Input, Dense
+import numpy as np
+from keras.layers import Input, Dense
+import tensorflow as tf
 
+input_imgs = Input(shape=(784, ))
+W = np.random.rand(784, 10)
+b = np.random.rand(10,)
+
+dense_layer = Dense(10, activation='relu')
+a_out = dense_layer(tf.convert_to_tensor([[1]*784]))
+
+print(dense_layer.get_weights())
+
+print(len(dense_layer.get_weights()))
+
+dense_layer.set_weights([W, b])
+
+print(dense_layer.get_weights())
+
+# print(encoded)
 # # Print the loaded content
 # print(loaded_content)
 

@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import pickle
 import datetime
+from logger import logger
 
 def splitListIntoChunks(data, numChunks):
     chunkSize = int(len(data) / numChunks)
@@ -63,36 +64,35 @@ class CustomSaveCallBack(tf.keras.callbacks.Callback):
         self.model = model
 
     def on_epoch_end(self, epoch, logs=None):
+
         print()
-        print("on_epoch_end saving, epoch num is: ", epoch +1 )
+
+        logger.info(f"on_epoch_end saving, epoch num is: {epoch +1}")
+
         if (epoch + 1 >= self.firstSavePoint):
-            print("(epoch + 1 >= self.firstSavePoint): ", epoch + 1)
-            
-            print("on_epoch_end saving, saveCounter num is: ", self.saveCounter )
+
+            logger.info(f"(epoch + 1 >= self.firstSavePoint): {epoch + 1}") 
+    
+            logger.info(f"on_epoch_end saving, saveCounter num is: {self.saveCounter}") 
+
             if (self.saveCounter % self.saveInterval == 0):
                 
                 main_dir = "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/"
-                print("Saving model as {} from keras callback!".format(main_dir + self.saveName.format(epoch + 1) + "_internal_" + '.keras'))
-                print(self.saveName + " " + str(epoch + 1))
+                logger.info(f"Saving model as {main_dir + self.saveName.format(epoch + 1)} from keras callback!" + "_internal_" + '.keras')
+                logger.info(self.saveName + " " + str(epoch + 1))
                 # self.model.save_weights(self.saveName.format(epoch + 1)) #  + '.h5')
                 self.model.save(main_dir + self.saveName + " " + str(epoch + 1) + "_" + datetime.datetime.now().strftime("%Y %m %d - %H %M %S") + "_epoch_" + str(epoch + 1) + "_internal_" + '.keras')
-
-                print("Saving model ......................")
+                logger.info("Saving model ......................")
                 saveNameBase = self.log_name + datetime.datetime.now().strftime("%Y %m %d - %H %M %S")
-
-                # dense_weights = dense_layer.get_weights()
-                # Access the weights of the postTransformation dense layer using TensorFlow graph
-                # graph = tf.compat.v1.get_default_graph()
-                # dense_weights = graph.get_tensor_by_name('tf_bert_model/postTransformation/kernel:0')
 
                 self.tokenizer.save_pretrained(main_dir + saveNameBase + '-Tokenizer-after-finish-training' + "epoch" + str(epoch + 1))
                 self.model.transformer.save_pretrained(main_dir + saveNameBase + '-Transformer-after-finish-training' + "epoch" + str(epoch + 1))
 
                 # Save the layer using pickle
-                print("Saving the pickle file")
+                logger.info("Saving the pickle file")
                 
-                pickle_file_path = main_dir + 'heads_of_the_model_' + self.saveName +  str(epoch + 1)+ "_.pickle"
-                print("pickle file name: ", pickle_file_path)
+                pickle_file_path = main_dir + 'heads_of_the_model_' + self.saveName +  str(epoch + 1) + "_.pickle"
+                logger.info(f"pickle file name: {pickle_file_path}")
                 with open(pickle_file_path, 'wb') as pickle_file:
                     pickle.dump(self.model.postTransformation.get_weights(), pickle_file)
 

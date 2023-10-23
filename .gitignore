@@ -132,5 +132,11 @@ dmypy.json
 
 */logs/*
 
+*.pb
+
 */wandb/*
 *.pickle
+multilingual_clip/TeacherLearning/model_wandb/fingerprint.pb
+.gitignore
+*.index
+multilingual_clip/TeacherLearning/model_wandb/variables/variables.data-00000-of-00001

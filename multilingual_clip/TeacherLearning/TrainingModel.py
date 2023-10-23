@@ -1,6 +1,9 @@
 import tensorflow as tf
 import transformers
-
+from logger import logger
+import pickle
+import numpy as np
+from keras.layers import Input, Dense
 
 class SentenceModel(tf.keras.Model):
 
@@ -57,7 +60,60 @@ class SentenceModelWithLinearTransformation(SentenceModel):
 
     def __init__(self, modelBase, embeddingSize=640, *args, **kwargs):
         super().__init__(modelBase, *args, **kwargs)
+
+        # W = np.random.rand(784, 10)
+        # b = np.random.rand(10)
+        
+        # self.postTransformation = tf.keras.layers.Dense(embeddingSize, activation='linear')
+
+        pickle_file_path = "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/heads_of_the_model_bert-large-arabertv2-Vit-B-16-plus-240-36_.pickle"
+
+        logger.info("Finishing load the weights except dense layer")
+        logger.info("Start loading the dense layer weights")
+        with open(pickle_file_path, 'rb') as pickle_file:
+            loaded_weights = pickle.load(pickle_file)
+            logger.info(len(loaded_weights))
+            logger.info(type(loaded_weights))
+            logger.info(type(loaded_weights[0]))
+            logger.info(type(loaded_weights[1]))
+            logger.info(len(loaded_weights[0]))
+            logger.info(len(loaded_weights[1]))
+            logger.info("embeddingSize")
+            logger.info(embeddingSize)
+
         self.postTransformation = tf.keras.layers.Dense(embeddingSize, activation='linear')
+
+        # https://github.com/keras-team/keras/issues/7229
+        # https://keras.io/api/saving/weights_saving_and_loading/
+
+        # Define the desired shape
+        batch_size = None  # This represents the variable batch size
+        feature_size = 1024  # This represents the feature size
+
+        a_out = self.postTransformation(tf.convert_to_tensor(tf.ones((128, feature_size), dtype=tf.float32)))
+
+        # a_out = self.postTransformation(tf.convert_to_tensor([[1]*1024]))
+
+        self.postTransformation.set_weights([loaded_weights[0], loaded_weights[1]])
+
+        # from keras.layers import Input, Dense
+        # import numpy as np
+        # from keras.layers import Input, Dense
+        # import tensorflow as tf
+
+
+        # dense_layer = Dense(10, activation='relu')
+        
+        # print(dense_layer.get_weights())
+
+        # print(len(dense_layer.get_weights()))
+
+        # dense_layer.set_weights([W, b])
+
+        # print(dense_layer.get_weights())
+
+        # logger.info("Finish loading the dense layer weights")
+
         # print("="*100)
         # print("="*100)
         # print("postTransformation", self.postTransformation)
