@@ -5,10 +5,10 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
                   shuffleSize=None, encoderDims=(1, 768)):
     def generatorFunc():
         while True:
-            # embeddings.shuffle()
+            embeddings.shuffle()
 
             for d in embeddings:
-                textEmb,caption = d['embedding'], d["ar_caption"]
+                textEmb,caption = d['embeddings'], d["ar_caption"]
 
                 if (caption is None):
                     logger.info("Skipping example due to None caption")
@@ -19,7 +19,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
                 seqLen = len(textIds)
 
                 if (seqLen > maxSeqLen):
-                    logger.info("Skipping example due to max lenth")
+                    logger.info("Skipping example due to max length")
                     continue
 
                 padSize = maxSeqLen - len(textIds)
@@ -31,7 +31,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
             if (loopForever == False):
                 break
 
-    f = lambda x, y=tf.float32: tf.convert_to_tensor(x, y)
+    f = lambda x, y=tf.float16: tf.convert_to_tensor(x, y)
 
     def _parse_function(textIds, attMask, textEmb):
         textIDs, att = f(textIds, tf.int32), f(attMask)
@@ -40,7 +40,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
 
     dataset = tf.data.Dataset.from_generator(generatorFunc,
                                              output_types=(
-                                                 tf.int32, tf.float32, tf.float32),
+                                                 tf.int32, tf.float16, tf.float16),
                                              output_shapes=(
                                                  (maxSeqLen,), (maxSeqLen,), encoderDims),
                                              )

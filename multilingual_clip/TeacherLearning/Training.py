@@ -10,9 +10,10 @@ import datetime
 import pickle
 
 from logger import logger
-# from tensorflow.keras import mixed_precision
+from keras import mixed_precision
 
-# mixed_precision.set_global_policy('mixed_float16')
+precision = "mixed_float16"
+mixed_precision.set_global_policy(precision)
 
 
 def loadTargetEmbeddings(dataset_name, validationSize=5000): # 2000000
@@ -21,10 +22,10 @@ def loadTargetEmbeddings(dataset_name, validationSize=5000): # 2000000
     valSamples = datasets.load_dataset(dataset_name, split='train[:{}]'.format(validationSize))
 
     
-    logger.info(f"len(trainSamples): {len(trainSamples)}") # len(trainSamples) 1995000
+    logger.info(f"len(trainSamples): {len(trainSamples)}") # len(trainSamples) 2920563
     logger.info(f"len(valSamples): {len(valSamples)}") # len(valSamples) 5000
 
-    embeddingShape = tf.convert_to_tensor(trainSamples[0]['embedding']).shape # (1, 640)
+    embeddingShape = tf.convert_to_tensor(trainSamples[0]['embeddings']).shape # (1, 640)
 
     logger.info(f"embeddingShape of one of the embeddings of the trainsamples: {embeddingShape}")
 
@@ -36,10 +37,10 @@ def loadTargetEmbeddings(dataset_name, validationSize=5000): # 2000000
 def singleGPUTraining():
 
     # Tune the hyperparameter 
-    stepsPerEpoch, lr = 7813, 0.00001  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    stepsPerEpoch, lr = 22817, 0.0001  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
     gradAccumSteps, batchSize = 1, 128 # 1, 2 # 1, 128 # 256
     epochs = 1000
-    numTrainSteps, numWarmupSteps = 1562600, 1000 # 1
+    numTrainSteps, numWarmupSteps = 22817000, 5000 # 1
     
     modelBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
     tokenizerBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
@@ -50,7 +51,7 @@ def singleGPUTraining():
     
     startWeights = "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/bert-large-arabertv2-Vit-B-16-plus-240- 36_2023 10 08 - 02 45 18_epoch_36_internal_.keras" # None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
 
-    dataset_name = "Arabic-Clip/Arabic_dataset_1M_translated_jsonl_format_ViT-B-16-plus-240" # "Arabic-Clip/Arabic_dataset_3M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240"
+    dataset_name = "Arabic-Clip/Arabic_dataset_3M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240" # "Arabic-Clip/Arabic_dataset_1M_translated_jsonl_format_ViT-B-16-plus-240"
     
     trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(dataset_name=dataset_name)
 
@@ -74,39 +75,36 @@ def singleGPUTraining():
     logger.info("Finishing loading keras checkpoint")
 
     
-
-
     if (startWeights is not None):
 
         logger.info("Loading weights ...")
         model.load_weights(startWeights,skip_mismatch=True)
 
-        # pickle_file_path = "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/heads_of_the_model_bert-large-arabertv2-Vit-B-16-plus-240-36_.pickle"
+        pickle_file_path = "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/heads_of_the_model_bert-large-arabertv2-Vit-B-16-plus-240-36_.pickle"
 
-        # logger.info("Finishing load the weights except dense layer")
-        # logger.info("Start loading the dense layer weights")
-        # with open(pickle_file_path, 'rb') as pickle_file:
-        #     loaded_weights = pickle.load(pickle_file)
-        #     logger.info(len(loaded_weights))
-        #     logger.info(type(loaded_weights))
-        #     logger.info(type(loaded_weights[0]))
-        #     logger.info(type(loaded_weights[1]))
-        #     logger.info(len(loaded_weights[0]))
-        #     logger.info(len(loaded_weights[1]))
-        #     logger.info("embeddingSize")
+        logger.info("Finishing load the weights except dense layer")
+        logger.info("Start loading the dense layer weights")
+        with open(pickle_file_path, 'rb') as pickle_file:
+            loaded_weights = pickle.load(pickle_file)
+            logger.info(len(loaded_weights))
+            logger.info(type(loaded_weights))
+            logger.info(type(loaded_weights[0]))
+            logger.info(type(loaded_weights[1]))
+            logger.info(len(loaded_weights[0]))
+            logger.info(len(loaded_weights[1]))
+            logger.info("embeddingSize")
 
-        # # logger.info("Finish loading the dense layer weights")
-        # # model = tf.keras.models.load_model(startWeights)
-        # # https://github.com/keras-team/keras/issues/7229
-        # # https://keras.io/api/saving/weights_saving_and_loading/
+        # logger.info("Finish loading the dense layer weights")
+        # model = tf.keras.models.load_model(startWeights)
+        # https://github.com/keras-team/keras/issues/7229
+        # https://keras.io/api/saving/weights_saving_and_loading/
 
-        # # Define the desired shape
-        # batch_size = None  # This represents the variable batch size
-        # feature_size = 1024  # This represents the feature size
+        # Define the desired shape
+        feature_size = 1024  # This represents the feature size
 
-        # a_out = model.postTransformation(tf.convert_to_tensor(tf.ones((128, feature_size), dtype=tf.float32)))
+        a_out = model.postTransformation(tf.convert_to_tensor(tf.ones((batchSize, feature_size), dtype=tf.float32)))
 
-        # model.postTransformation.set_weights([loaded_weights[0], loaded_weights[1]])
+        model.postTransformation.set_weights([loaded_weights[0], loaded_weights[1]])
 
 
     model.compile(createOptimizerFunc(), loss='mse', metrics=['mae', 'cosine_similarity']) # I added the loss argument
@@ -168,7 +166,10 @@ def singleGPUTraining():
             "modelBase": modelBase,
             "tokenizerBase": tokenizerBase,
             "imageBase": imageBase,
-            "Dataset": dataset_name
+            "Dataset": dataset_name,
+            "log_name": log_name,
+            "startWeights": startWeights,
+            "precision": precision
         },
     )
 
