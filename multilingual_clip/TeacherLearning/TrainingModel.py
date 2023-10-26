@@ -13,20 +13,24 @@ class SentenceModel(tf.keras.Model):
         
 
     @tf.function
-    def generateSingleEmbedding(self, input, training=False):
+    def generateSingleEmbedding(self, input, training=False, precision_16 = False):
+        
+        precision_settings = tf.float16 if precision_16 else tf.float32
+
         inds, att = input
         embs = self.transformer({'input_ids': inds, 'attention_mask': att}, training=training)[0]
-        outAtt = tf.cast(att, tf.float16)
+        outAtt = tf.cast(att, precision_settings)
         sampleLength = tf.reduce_sum(outAtt, axis=-1, keepdims=True)
         maskedEmbs = embs * tf.expand_dims(outAtt, axis=-1)
         print("="*100)
         print("Training arg in generateSingleEmbedding of SentenceModel class: ", training)
         print("="*100)
-        return tf.reduce_sum(maskedEmbs, axis=1) / tf.cast(sampleLength, tf.float16)
+        return tf.reduce_sum(maskedEmbs, axis=1) / tf.cast(sampleLength, precision_settings)
 
     @tf.function
-    def generateMultipleEmbeddings(self, input, training=False):
+    def generateMultipleEmbeddings(self, input, training=False, precision_16 = False):
         # print(len(input))
+        precision_settings = tf.float16 if precision_16 else tf.float32
         inds, att = input
         embs = self.transformer({'input_ids': inds, 'attention_mask': att}, training=training)['last_hidden_state']
         # print("="*100)
@@ -34,13 +38,13 @@ class SentenceModel(tf.keras.Model):
         # print("Training arg in generateMultipleEmbeddings of SentenceModel class: ", training)
         # print("="*100)
 
-        outAtt = tf.cast(att, tf.float16)
+        outAtt = tf.cast(att, precision_settings)
         sampleLength = tf.reduce_sum(outAtt, axis=-1, keepdims=True)
         # print("="*100)
         # print("Att mask:", tf.expand_dims(outAtt, axis=-1).shape) # Att mask: (None, 32, 1)
         # print("="*100)
         maskedEmbs = embs * tf.expand_dims(outAtt, axis=-1)
-        return tf.reduce_sum(maskedEmbs, axis=1) / tf.cast(sampleLength, tf.float16)
+        return tf.reduce_sum(maskedEmbs, axis=1) / tf.cast(sampleLength, precision_settings)
 
     @tf.function
     def call(self, inputs, training=False, mask=None):
@@ -58,9 +62,10 @@ class SentenceModel(tf.keras.Model):
 
 class SentenceModelWithLinearTransformation(SentenceModel):
 
-    def __init__(self, modelBase, embeddingSize=640, *args, **kwargs):
+    def __init__(self, modelBase, embeddingSize=640,precision_16 = False, *args, **kwargs):
         super().__init__(modelBase, *args, **kwargs)
 
+        self.precision_16 = precision_16
         # W = np.random.rand(784, 10)
         # b = np.random.rand(10)
         
@@ -135,7 +140,7 @@ class SentenceModelWithLinearTransformation(SentenceModel):
         # self.generateMultipleEmbeddings(inputs, training) shape is:  (None, 768)
         
 
-        return self.postTransformation(self.generateMultipleEmbeddings(inputs, training))
+        return self.postTransformation(self.generateMultipleEmbeddings(inputs, training, precision_16 = self.precision_16))
 
 
 class SentenceModelWithTanHTransformation(SentenceModel):

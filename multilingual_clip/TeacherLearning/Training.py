@@ -37,10 +37,10 @@ def loadTargetEmbeddings(dataset_name, validationSize=5000): # 2000000
 def singleGPUTraining():
 
     # Tune the hyperparameter 
-    stepsPerEpoch, lr = 22817, 0.0001  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
-    gradAccumSteps, batchSize = 1, 128 # 1, 2 # 1, 128 # 256
+    stepsPerEpoch, lr = 45634, 0.0001  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    gradAccumSteps, batchSize = 1, 64 # 1, 2 # 1, 128 # 256
     epochs = 1000
-    numTrainSteps, numWarmupSteps = 22817000, 5000 # 1
+    numTrainSteps, numWarmupSteps = 45634000, 5000 # 1
     
     modelBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
     tokenizerBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
@@ -66,7 +66,8 @@ def singleGPUTraining():
 
     logger.info(f"imageEncoderDimensions[-1]: {imageEncoderDimensions[-1]}")
 
-    model = TrainingModel.SentenceModelWithLinearTransformation(modelBase, imageEncoderDimensions[-1])
+    precision_16 = True
+    model = TrainingModel.SentenceModelWithLinearTransformation(modelBase, imageEncoderDimensions[-1], precision_16= precision_16)
 
     # from tensorflow import keras
     # model = keras.models.load_model("/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/bert-large-arabertv2-Vit-B-16-plus-240- 36_2023 10 08 - 02 45 18_epoch_36_internal_")
@@ -115,7 +116,8 @@ def singleGPUTraining():
                                                                           tokenizer,
                                                                         #   targetCaptions=targetCaptions,
                                                                           maxSeqLen = 64,
-                                                                          encoderDims=imageEncoderDimensions)
+                                                                          encoderDims=imageEncoderDimensions,
+                                                                          precision_16=precision_16)
 
 
     if (gradAccumSteps > 1):  # In order to make fair logging on Wandb
@@ -169,7 +171,7 @@ def singleGPUTraining():
             "Dataset": dataset_name,
             "log_name": log_name,
             "startWeights": startWeights,
-            "precision": precision
+            "precision": precision_16
         },
     )
 

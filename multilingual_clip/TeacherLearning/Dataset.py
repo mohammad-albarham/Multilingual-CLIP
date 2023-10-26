@@ -2,7 +2,10 @@ import tensorflow as tf
 from logger import logger
 
 def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=True,
-                  shuffleSize=None, encoderDims=(1, 768)):
+                  shuffleSize=None, encoderDims=(1, 768),precision_16=False):
+    
+    precision_settings = tf.float16 if precision_16 else tf.float32
+
     def generatorFunc():
         while True:
             embeddings.shuffle()
@@ -31,7 +34,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
             if (loopForever == False):
                 break
 
-    f = lambda x, y=tf.float16: tf.convert_to_tensor(x, y)
+    f = lambda x, y=precision_settings: tf.convert_to_tensor(x, y)
 
     def _parse_function(textIds, attMask, textEmb):
         textIDs, att = f(textIds, tf.int32), f(attMask)
@@ -40,7 +43,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
 
     dataset = tf.data.Dataset.from_generator(generatorFunc,
                                              output_types=(
-                                                 tf.int32, tf.float16, tf.float16),
+                                                 tf.int32, precision_settings, precision_settings),
                                              output_shapes=(
                                                  (maxSeqLen,), (maxSeqLen,), encoderDims),
                                              )
@@ -53,7 +56,7 @@ def createDataset(embeddings, batchSize, tokenizer, maxSeqLen=32, loopForever=Tr
 
 
 def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize, tokenizer, #targetCaptions,
-                                       maxSeqLen=32, encoderDims=(1, 768)):
+                                       maxSeqLen=32, encoderDims=(1, 768),precision_16=False):
     
 
     logger.info(f"batchSize is {batchSize}")
@@ -61,7 +64,7 @@ def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize
     logger.info(f"encoderDims is {encoderDims}")
 
     valDataset = createDataset(valEmbeddings, batchSize, tokenizer,
-                               loopForever=False, maxSeqLen=maxSeqLen, encoderDims=encoderDims)
+                               loopForever=False, maxSeqLen=maxSeqLen, encoderDims=encoderDims, precision_16=precision_16)
 
 
     trainDataset = createDataset(trainEmbeddings, batchSize, tokenizer,
