@@ -68,6 +68,6 @@ def createTrainingAndValidationDataset(trainEmbeddings, valEmbeddings, batchSize
 
 
     trainDataset = createDataset(trainEmbeddings, batchSize, tokenizer,
-                                 loopForever=True, maxSeqLen=maxSeqLen, encoderDims=encoderDims)
+                                 loopForever=True, maxSeqLen=maxSeqLen, encoderDims=encoderDims, precision_16=precision_16)
 
     return trainDataset, valDataset

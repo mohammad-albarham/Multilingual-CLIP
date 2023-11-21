@@ -16,10 +16,10 @@ precision = "mixed_float16"
 mixed_precision.set_global_policy(precision)
 
 
-def loadTargetEmbeddings(dataset_name, validationSize=5000): # 2000000
+def loadTargetEmbeddings(dataset_name_train,dataset_name_validation , validationSize=5000): # 2000000
 
-    trainSamples = datasets.load_dataset(dataset_name, split='train[{}:]'.format(validationSize))
-    valSamples = datasets.load_dataset(dataset_name, split='train[:{}]'.format(validationSize))
+    trainSamples = datasets.load_dataset(dataset_name_train, split='train')
+    valSamples = datasets.load_dataset(dataset_name_validation, split='train[:{}]'.format(validationSize))
 
     
     logger.info(f"len(trainSamples): {len(trainSamples)}") # len(trainSamples) 2920563
@@ -37,23 +37,25 @@ def loadTargetEmbeddings(dataset_name, validationSize=5000): # 2000000
 def singleGPUTraining():
 
     # Tune the hyperparameter 
-    stepsPerEpoch, lr = 22817, 0.01  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    stepsPerEpoch, lr = 885, 0.0000001  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
     gradAccumSteps, batchSize = 1, 128 # 1, 2 # 1, 128 # 256
-    epochs = 1000
-    numTrainSteps, numWarmupSteps = 7605666, 5000 # 1
+    epochs = 200
+    numTrainSteps, numWarmupSteps = 177000, 1000 # 1
     
-    modelBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
-    tokenizerBase = 'aubmindlab/bert-large-arabertv2' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
+    modelBase = 'UBC-NLP/ARBERTv2' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
+    tokenizerBase = 'UBC-NLP/ARBERTv2' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
+
     imageBase = "Vit-B-16-plus-240"
-    modelName = "bert-large-arabertv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-" # '{}-{}'.format(modelBase, imageBase) # # modelName = modelBase.split("/")[1]  + "-" + imageBase + "-{}" # '{}-{}'.format(modelBase, imageBase)
+    modelName = "ARBERTv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-" # '{}-{}'.format(modelBase, imageBase) # # modelName = modelBase.split("/")[1]  + "-" + imageBase + "-{}" # '{}-{}'.format(modelBase, imageBase)
 
-    log_name =  "bert-large-arabertv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-"
+    log_name =  "ARBERTv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-"
     
-    startWeights = "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/bert-large-arabertv2-Vit-B-16-plus-240- 36_2023 10 08 - 02 45 18_epoch_36_internal_.keras" # None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
+    startWeights = "/home/lenovo/Desktop/arabic_clip/ARBERTv2_vit_B_16_plus/ARBERTv2-Vit-B-16-plus-240- 103_2023 11 11 - 22 18 20_epoch_103_internal_.keras"# None # "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/bert-large-arabertv2-Vit-B-16-plus-240- 36_2023 10 08 - 02 45 18_epoch_36_internal_.keras" # None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
 
-    dataset_name = "Arabic-Clip/Arabic_dataset_3M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240" # "Arabic-Clip/Arabic_dataset_1M_translated_jsonl_format_ViT-B-16-plus-240"
+    dataset_name_validation = "Arabic-Clip/Arabic_dataset_13M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240" # "Arabic-Clip/Arabic_dataset_1M_translated_jsonl_format_ViT-B-16-plus-240"
+    dataset_name_train  = "Arabic-Clip/mscoco_captions_en_ar_ViT_B_16_plus_240_1st_caption" # "Arabic-Clip/Arabic_dataset_13M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240" # 
     
-    trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(dataset_name=dataset_name)
+    trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(dataset_name_train=dataset_name_train,dataset_name_validation=dataset_name_validation)
 
     def createOptimizerFunc():
         optimizer, schedule = transformers.optimization_tf.create_optimizer(lr, numTrainSteps, numWarmupSteps)
@@ -66,7 +68,7 @@ def singleGPUTraining():
 
     logger.info(f"imageEncoderDimensions[-1]: {imageEncoderDimensions[-1]}")
 
-    precision_16 = True
+    precision_16 = True # True
     model = TrainingModel.SentenceModelWithLinearTransformation(modelBase, imageEncoderDimensions[-1], precision_16= precision_16)
 
     # from tensorflow import keras
@@ -81,7 +83,7 @@ def singleGPUTraining():
         logger.info("Loading weights ...")
         model.load_weights(startWeights,skip_mismatch=True)
 
-        pickle_file_path = "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/heads_of_the_model_bert-large-arabertv2-Vit-B-16-plus-240-36_.pickle"
+        pickle_file_path = "/home/lenovo/Desktop/arabic_clip/ARBERTv2_vit_B_16_plus/ARBERTv2_vit_B_16_plusheads_of_the_model_ARBERTv2-Vit-B-16-plus-240-103_.pickle" # "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/heads_of_the_model_bert-large-arabertv2-Vit-B-16-plus-240-36_.pickle"
 
         logger.info("Finishing load the weights except dense layer")
         logger.info("Start loading the dense layer weights")
@@ -101,9 +103,9 @@ def singleGPUTraining():
         # https://keras.io/api/saving/weights_saving_and_loading/
 
         # Define the desired shape
-        feature_size = 1024  # This represents the feature size
+        feature_size = 768  # This represents the feature size
 
-        a_out = model.postTransformation(tf.convert_to_tensor(tf.ones((batchSize, feature_size), dtype=tf.float32)))
+        a_out = model.postTransformation(tf.convert_to_tensor(tf.ones((batchSize, feature_size), dtype=tf.float16)))
 
         model.postTransformation.set_weights([loaded_weights[0], loaded_weights[1]])
 
@@ -157,6 +159,7 @@ def singleGPUTraining():
 
         # track hyperparameters and run metadata with wandb.config
         config={
+            "epoch": epochs,
             "stepsPerEpoch": stepsPerEpoch,
             "lr": lr,
             "gradAccumSteps": gradAccumSteps,
@@ -168,7 +171,8 @@ def singleGPUTraining():
             "modelBase": modelBase,
             "tokenizerBase": tokenizerBase,
             "imageBase": imageBase,
-            "Dataset": dataset_name,
+            "dataset_name_train": dataset_name_train,
+            "dataset_name_validation": dataset_name_validation,
             "log_name": log_name,
             "startWeights": startWeights,
             "precision": precision_16
@@ -184,7 +188,7 @@ def singleGPUTraining():
     model.fit(trainDataset, epochs=epochs, steps_per_epoch=stepsPerEpoch,
               validation_data=valDataset,
               callbacks=[
-                  Utils.CustomSaveCallBack(modelName, saveInterval=1,firstSavePoint=0, log_name=log_name,tokenizer=tokenizer,model=model),
+                  Utils.CustomSaveCallBack(modelName, saveInterval=5,firstSavePoint=0, log_name=log_name,tokenizer=tokenizer,model=model),
                 #   WandbModelCheckpoint(filepath = filepath, verbose=1, save_freq='epoch', save_best_only=True), #save_freq='epoch'
                   WandbMetricsLogger(log_freq="batch"), # epoch
                   # tensorboard_callback,

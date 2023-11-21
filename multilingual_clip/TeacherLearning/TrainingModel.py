@@ -17,6 +17,7 @@ class SentenceModel(tf.keras.Model):
         
         precision_settings = tf.float16 if precision_16 else tf.float32
 
+        print("precision_settings: ", precision_settings)
         inds, att = input
         embs = self.transformer({'input_ids': inds, 'attention_mask': att}, training=training)[0]
         outAtt = tf.cast(att, precision_settings)
