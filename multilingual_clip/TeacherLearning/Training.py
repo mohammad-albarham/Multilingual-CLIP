@@ -19,7 +19,7 @@ mixed_precision.set_global_policy(precision)
 def loadTargetEmbeddings(dataset_name_train,dataset_name_validation , validationSize=5000): # 2000000
 
     trainSamples = datasets.load_dataset(dataset_name_train, split='train')
-    valSamples = datasets.load_dataset(dataset_name_validation, split='train[:{}]'.format(validationSize))
+    valSamples = datasets.load_dataset(dataset_name_validation,split='validation') #, split='train[:{}]'.format(validationSize))
 
     
     logger.info(f"len(trainSamples): {len(trainSamples)}") # len(trainSamples) 2920563
@@ -37,23 +37,23 @@ def loadTargetEmbeddings(dataset_name_train,dataset_name_validation , validation
 def singleGPUTraining():
 
     # Tune the hyperparameter 
-    stepsPerEpoch, lr = 885, 0.0000001  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
+    stepsPerEpoch, lr = 15625, 0.000001  #1133 # 10, 0.00005 # 1172, 0.00005  # 8851, 0.00005 # 2213 # 566405/128 = 4425.0390625 # 586, 0.00001 # maximum number of stepPerEpoch I can feed: 585.9375
     gradAccumSteps, batchSize = 1, 128 # 1, 2 # 1, 128 # 256
     epochs = 200
-    numTrainSteps, numWarmupSteps = 177000, 1000 # 1
+    numTrainSteps, numWarmupSteps = 3125000, 1000 # 1
     
-    modelBase = 'UBC-NLP/ARBERTv2' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
-    tokenizerBase = 'UBC-NLP/ARBERTv2' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
+    modelBase = "aubmindlab/bert-base-arabertv2" # 'UBC-NLP/ARBERTv2' # 'xlm-roberta-large' # 'bert-base-multilingual-cased'  # 'aubmindlab/bert-base-arabertv2'
+    tokenizerBase = "aubmindlab/bert-base-arabertv2" # 'UBC-NLP/ARBERTv2' # 'xlm-roberta-large' #'bert-base-multilingual-cased' # 'aubmindlab/bert-base-arabertv2'
 
-    imageBase = "Vit-B-16-plus-240"
-    modelName = "ARBERTv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-" # '{}-{}'.format(modelBase, imageBase) # # modelName = modelBase.split("/")[1]  + "-" + imageBase + "-{}" # '{}-{}'.format(modelBase, imageBase)
+    imageBase = "ViT-B-16-SigLIP-512"
+    modelName = "arabertv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-" # '{}-{}'.format(modelBase, imageBase) # # modelName = modelBase.split("/")[1]  + "-" + imageBase + "-{}" # '{}-{}'.format(modelBase, imageBase)
 
-    log_name =  "ARBERTv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-"
+    log_name =  "arabertv2" +  "-" + imageBase + "-" # modelBase  + "-" + imageBase + "-"
     
-    startWeights = "/home/lenovo/Desktop/arabic_clip/ARBERTv2_vit_B_16_plus/ARBERTv2-Vit-B-16-plus-240- 103_2023 11 11 - 22 18 20_epoch_103_internal_.keras"# None # "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/bert-large-arabertv2-Vit-B-16-plus-240- 36_2023 10 08 - 02 45 18_epoch_36_internal_.keras" # None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
+    startWeights = None # "/home/lenovo/Desktop/arabic_clip/ARBERTv2_vit_B_16_plus/ARBERTv2-Vit-B-16-plus-240- 103_2023 11 11 - 22 18 20_epoch_103_internal_.keras"# None # "/home/lenovo/Desktop/arabic_clip/arabert_v2_vit_B_16_plus/phase_1/bert-large-arabertv2-Vit-B-16-plus-240- 36_2023 10 08 - 02 45 18_epoch_36_internal_.keras" # None # "/home/lenovo/Desktop/arabic_clip/Multilingual-CLIP/multilingual_clip/TeacherLearning/old_files/aubmindlab_1/bert-base-arabertv2-Vit-B-32"
 
-    dataset_name_validation = "Arabic-Clip/Arabic_dataset_13M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240" # "Arabic-Clip/Arabic_dataset_1M_translated_jsonl_format_ViT-B-16-plus-240"
-    dataset_name_train  = "Arabic-Clip/mscoco_captions_en_ar_ViT_B_16_plus_240_1st_caption" # "Arabic-Clip/Arabic_dataset_13M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240" # 
+    dataset_name_validation = "Arabic-Clip/Arabic_dataset_13M_translated_cleaned_v2_jsonl_format_ViT-B-16-SigLIP-512_validation"# "Arabic-Clip/Arabic_dataset_13M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240" # "Arabic-Clip/Arabic_dataset_1M_translated_jsonl_format_ViT-B-16-plus-240"
+    dataset_name_train  = "Arabic-Clip/arabic_dataset_translated_v2_ViT-B-16-SigLIP-512" # "Arabic-Clip/Arabic_dataset_13M_translated_cleaned_v2_jsonl_format_ViT-B-16-plus-240" # 
     
     trainEmbeddings, valEmbeddings, imageEncoderDimensions = loadTargetEmbeddings(dataset_name_train=dataset_name_train,dataset_name_validation=dataset_name_validation)
 

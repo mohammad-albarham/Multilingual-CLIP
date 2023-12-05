@@ -77,7 +77,7 @@ class CustomSaveCallBack(tf.keras.callbacks.Callback):
 
             if (self.saveCounter % self.saveInterval == 0):
                 
-                main_dir = "/home/lenovo/Desktop/arabic_clip/ARBERTv2_vit_B_16_plus/"
+                main_dir = "/home/lenovo/Desktop/arabic_clip/arabertv2-vit-B-16-siglib/"
                 logger.info(f"Saving model as {main_dir + self.saveName.format(epoch + 1)} from keras callback!" + "_internal_" + '.keras')
                 logger.info(self.saveName + " " + str(epoch + 1))
                 # self.model.save_weights(self.saveName.format(epoch + 1)) #  + '.h5')
@@ -91,7 +91,7 @@ class CustomSaveCallBack(tf.keras.callbacks.Callback):
                 # Save the layer using pickle
                 logger.info("Saving the pickle file")
                 
-                pickle_file_path = main_dir + 'ARBERTv2_vit_B_16_plus' +'heads_of_the_model_' + self.saveName +  str(epoch + 1) + "_.pickle"
+                pickle_file_path = main_dir + 'arabertv2-vit-B-16-siglib' +'heads_of_the_model_' + self.saveName +  str(epoch + 1) + "_.pickle"
                 logger.info(f"pickle file name: {pickle_file_path}")
                 with open(pickle_file_path, 'wb') as pickle_file:
                     pickle.dump(self.model.postTransformation.get_weights(), pickle_file)
