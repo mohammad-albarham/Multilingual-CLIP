@@ -77,7 +77,7 @@ class CustomSaveCallBack(tf.keras.callbacks.Callback):
 
             if (self.saveCounter % self.saveInterval == 0):
                 
-                main_dir = "/home/lenovo/Desktop/arabic_clip/arabertv2-vit-B-16-siglib/"
+                main_dir = "/home/lenovo/Desktop/arabic_clip/arabertv2-vit-B-16-siglib-mscoco"
                 logger.info(f"Saving model as {main_dir + self.saveName.format(epoch + 1)} from keras callback!" + "_internal_" + '.keras')
                 logger.info(self.saveName + " " + str(epoch + 1))
                 # self.model.save_weights(self.saveName.format(epoch + 1)) #  + '.h5')
