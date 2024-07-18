@@ -33,7 +33,15 @@ class SentenceModel(tf.keras.Model):
         # print(len(input))
         precision_settings = tf.float16 if precision_16 else tf.float32
         inds, att = input
-        embs = self.transformer({'input_ids': inds, 'attention_mask': att}, training=training)['last_hidden_state']
+        # (batch_size, sequence_length, hidden_size)
+        # https://huggingface.co/docs/transformers/model_doc/bert#bertmodel
+        # https://huggingface.co/transformers/v3.0.2/model_doc/bert.html
+        # last_hidden_state (torch.FloatTensor of shape (batch_size, sequence_length, hidden_size)):
+        # Sequence of hidden-states at the output of the last layer of the model.
+        # The model outputs a dictionary, and the function retrieves the last_hidden_state, which represents the embeddings for each token in the input sequence.
+        
+
+        embs = self.transformer({'input_ids': inds, 'attention_mask': att}, training=training)['last_hidden_state'] 
         # print("="*100)
         # print("Embs:", embs.shape) # Embs: (None, 32, 768)
         # print("Training arg in generateMultipleEmbeddings of SentenceModel class: ", training)
